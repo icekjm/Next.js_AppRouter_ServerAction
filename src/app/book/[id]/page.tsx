@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import style from "./page.module.css";
+import { createReviewAction } from "@/actions/create-review.action";
 
 //아래 설정을 하면, id가 1,2,3 외에 값은 모두 404 not found페이지가 호출됨
 //export const dynamicParams = false;
@@ -51,20 +52,13 @@ async function BookDetail({ bookId }: { bookId: string }) {
 //자동으로 서버액션을 호출하는 HTTP 요청이 서버로 전송하게 되고
 // 이런 서버액션들은 컴파일 결과 자동으로 특정 해시값을 갖는 API로서 설정이되서
 //  request Header의 Next action이라는 항목에 위 특정 해시값이 나타남
-function ReviewEditor() {
-  async function createReviewAction(formData: FormData) {
-    "use server";
-    const content = formData.get("content")?.toString;
-    const author = formData.get("author")?.toString;
-
-    console.log(content, author);
-  }
-
+function ReviewEditor({ bookId }: { bookId: string }) {
   return (
     <section>
       <form action={createReviewAction}>
-        <input name="content" placeholder="리뷰 내용"></input>
-        <input name="author" placeholder="작성자"></input>
+        <input name="bookId" value={bookId} hidden readOnly />
+        <input required name="content" placeholder="리뷰 내용"></input>
+        <input required name="author" placeholder="작성자"></input>
         <button type="submit">작성하기</button>
       </form>
     </section>
@@ -109,7 +103,7 @@ export default async function Page({
   return (
     <div className={style.container}>
       <BookDetail bookId={id} />
-      <ReviewEditor />
+      <ReviewEditor bookId={id} />
     </div>
   );
 }
