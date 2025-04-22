@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import style from "./page.module.css";
-import { createReviewAction } from "@/actions/create-review.action";
+import { ReviewData } from "@/types";
+import ReviewItem from "@/components/review-item";
+import ReviewEditor from "@/components/review-editor";
 
 //아래 설정을 하면, id가 1,2,3 외에 값은 모두 404 not found페이지가 호출됨
 //export const dynamicParams = false;
@@ -48,23 +50,6 @@ async function BookDetail({ bookId }: { bookId: string }) {
   );
 }
 
-//use server라는 지시자를 통해 서버액션을 만들고 해당하는 서버액션을 호출하는 form을 브라우저에서 제출하게되면
-//자동으로 서버액션을 호출하는 HTTP 요청이 서버로 전송하게 되고
-// 이런 서버액션들은 컴파일 결과 자동으로 특정 해시값을 갖는 API로서 설정이되서
-//  request Header의 Next action이라는 항목에 위 특정 해시값이 나타남
-function ReviewEditor({ bookId }: { bookId: string }) {
-  return (
-    <section>
-      <form action={createReviewAction}>
-        <input name="bookId" value={bookId} hidden readOnly />
-        <input required name="content" placeholder="리뷰 내용"></input>
-        <input required name="author" placeholder="작성자"></input>
-        <button type="submit">작성하기</button>
-      </form>
-    </section>
-  );
-}
-
 //props에서 params만 꺼내서 쓰기 위해 파라미터 첫번째와 같이 설정
 //params는 Promise 객체임
 //함수나 컴포넌트, 혹은 어떤 변수의 값이 "나중에 비동기적으로 도착"할 예정이라면 그 타입은 Promise<T>로 정의
@@ -92,6 +77,26 @@ function ReviewEditor({ bookId }: { bookId: string }) {
 //   );
 // }
 
+async function ReviewList({ bookId }: { bookId: string }) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_SERVER_URL}/review/book/${bookId}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Review fetch failed : ${response.statusText}`);
+  }
+
+  const reviews: ReviewData[] = await response.json();
+
+  return (
+    <section>
+      {reviews.map((review) => (
+        <ReviewItem key={`review-item-${review.id}`} {...review} />
+      ))}
+    </section>
+  );
+}
+
 // 해결책2
 export default async function Page({
   params,
@@ -104,6 +109,7 @@ export default async function Page({
     <div className={style.container}>
       <BookDetail bookId={id} />
       <ReviewEditor bookId={id} />
+      <ReviewList bookId={id} />
     </div>
   );
 }
